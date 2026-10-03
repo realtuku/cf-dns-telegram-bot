@@ -100,7 +100,7 @@ async def cf_create_cname(
     zone_id: str,
     name: str,
     content: str,
-    proxied: bool = True,
+    proxied: bool = False,
     ttl: int = 1,
 ) -> dict:
     url = f"{CF_API}/zones/{zone_id}/dns_records"
