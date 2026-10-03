@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Cloudflare DNS Manager — Telegram Bot | cfdnsbot.ximanta.xyz</title>
+<meta name="description" content="A free, open-source Telegram bot to create Cloudflare DNS CNAME records from your phone. Save mobile data — under 1 KB per DNS change vs 2–5 MB on the dashboard. Deploy on Render in five minutes." />
+<meta name="keywords" content="cloudflare telegram bot, cloudflare dns bot, manage cloudflare dns telegram, cloudflare cname telegram, dns manager bot, telegram bot cloudflare api, cloudflare dns without dashboard, free dns telegram bot, render telegram bot" />
+<meta name="author" content="realximanta" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="theme-color" content="#ffffff" />
+<link rel="canonical" href="https://cfdnsbot.ximanta.xyz/" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Cloudflare DNS Manager — Telegram Bot" />
+<meta property="og:title" content="Cloudflare DNS Manager — Telegram Bot" />
+<meta property="og:description" content="Create Cloudflare CNAME records right from Telegram. Free, open-source, and data-friendly — under 1 KB per DNS change." />
+<meta property="og:url" content="https://cfdnsbot.ximanta.xyz/" />
+<meta property="og:image" content="https://cfdnsbot.ximanta.xyz/assets/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Cloudflare DNS Manager — Telegram Bot" />
+<meta name="twitter:description" content="Create Cloudflare CNAME records right from Telegram. Free, open-source, and data-friendly." />
+<meta name="twitter:image" content="https://cfdnsbot.ximanta.xyz/assets/og-image.png" />
+
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+<link rel="apple-touch-icon" href="/assets/og-image.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Cloudflare DNS Manager — Telegram Bot",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any (server-side)",
+      "description": "A free, open-source Telegram bot to create Cloudflare DNS CNAME records from your phone.",
+      "url": "https://cfdnsbot.ximanta.xyz/",
+      "codeRepository": "https://github.com/realximanta/cf-telegram-bot",
+      "programmingLanguage": "Python",
+      "license": "https://github.com/realximanta/cf-telegram-bot/blob/main/LICENSE",
+      "author": {
+        "@type": "Person",
+        "name": "realximanta",
+        "url": "https://github.com/realximanta",
+        "email": "realximanta@gmail.com"
+      },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    },
+    {
+      "@type": "HowTo",
+      "name": "Deploy the Cloudflare DNS Telegram bot on Render",
+      "totalTime": "PT5M",
+      "step": [
+        { "@type": "HowToStep", "name": "Fork the repository", "text": "Fork the repository to your GitHub account." },
+        { "@type": "HowToStep", "name": "Create a Telegram bot", "text": "Message BotFather on Telegram and copy the token." },
+        { "@type": "HowToStep", "name": "Create a Cloudflare API token", "text": "Create a token with Zone:Read and DNS:Edit permissions." },
+        { "@type": "HowToStep", "name": "Deploy on Render", "text": "Use the render.yaml Blueprint and fill in the env vars." },
+        { "@type": "HowToStep", "name": "Keep it alive", "text": "Add an UptimeRobot monitor on /health every 5 minutes." }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is the Cloudflare DNS Telegram bot free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The bot is MIT-licensed, and the recommended hosting stack — Render free tier plus UptimeRobot free tier — costs nothing." } },
+        { "@type": "Question", "name": "How much mobile data does it use?", "acceptedAnswer": { "@type": "Answer", "text": "A full DNS change via Telegram uses under 1 KB, compared to 2–5 MB for opening the Cloudflare web dashboard once." } },
+        { "@type": "Question", "name": "Can other people use my bot?", "acceptedAnswer": { "@type": "Answer", "text": "No. The bot only responds to Telegram chat IDs listed in the ALLOWED_CHAT_IDS environment variable." } },
+        { "@type": "Question", "name": "Which record types are supported?", "acceptedAnswer": { "@type": "Answer", "text": "Currently CNAME. A, AAAA, TXT, MX and other types are on the roadmap." } }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-soft:#fafafa;
+    --bg-elev:#ffffff;
+    --fg:#0a0a0a;
+    --fg-soft:#404040;
+    --muted:#737373;
+    --border:#e5e5e5;
+    --border-strong:#d4d4d4;
+    --accent:#0ea5e9;
+    --accent-2:#7c3aed;
+    --accent-ink:#0369a1;
+    --radius:14px;
+    --radius-lg:20px;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.03);
+    --shadow-md:0 4px 12px rgba(0,0,0,.05), 0 2px 4px rgba(0,0,0,.03);
+    --shadow-lg:0 20px 40px -20px rgba(2,6,23,.18), 0 8px 16px -8px rgba(2,6,23,.10);
+    --font-sans:'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-display:'Space Grotesk', var(--font-sans);
+    --font-mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:88px}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:var(--font-sans);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+  }
+  ::selection{background:#0ea5e9;color:#fff}
+  a{color:var(--fg);text-decoration:none;transition:color .15s ease}
+  a:hover{color:var(--accent-ink)}
+  h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.02em;font-weight:600;margin:0;line-height:1.2}
+  h1{font-size:clamp(34px,5.6vw,60px);font-weight:700;letter-spacing:-.035em}
+  h2{font-size:clamp(24px,3vw,32px);margin-top:64px;margin-bottom:14px}
+  h3{font-size:18px;margin-bottom:8px}
+  p{margin:12px 0;color:var(--fg-soft)}
+  code,kbd,samp{font-family:var(--font-mono);font-size:.92em}
+  :not(pre) > code{
+    background:var(--bg-soft);border:1px solid var(--border);
+    padding:2px 7px;border-radius:6px;color:var(--fg);
+  }
+  hr{border:0;border-top:1px solid var(--border);margin:48px 0}
+
+  /* ---------- Floating GitHub button ---------- */
+  .gh-fab{
+    position:fixed;right:22px;bottom:22px;z-index:100;
+    display:flex;align-items:center;gap:10px;
+    padding:12px 18px 12px 14px;border-radius:999px;
+    background:linear-gradient(135deg,#0a0a0a 0%,#1f2937 100%);
+    color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px;
+    box-shadow:var(--shadow-lg);
+    animation:ghFloat 5s ease-in-out infinite;
+    transition:transform .25s ease, box-shadow .25s ease;
+    isolation:isolate;overflow:hidden;
+  }
+  .gh-fab::before{
+    content:"";position:absolute;inset:-2px;border-radius:999px;padding:2px;
+    background:linear-gradient(120deg,#0ea5e9,#7c3aed,#0ea5e9);
+    background-size:220% 220%;
+    animation:gradientShift 5s linear infinite;
+    z-index:-2;
+  }
+  .gh-fab::after{
+    content:"";position:absolute;inset:0;border-radius:999px;
+    background:linear-gradient(135deg,#0a0a0a 0%,#1f2937 100%);
+    z-index:-1;
+  }
+  .gh-fab:hover{transform:translateY(-3px) scale(1.03);color:#fff}
+  .gh-fab svg{width:22px;height:22px;flex:none}
+  .gh-fab .dot{
+    width:7px;height:7px;border-radius:50%;background:#22c55e;
+    box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:pulse 2s ease-out infinite;
+  }
+  @keyframes ghFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}
+    70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}
+    100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+  }
+
+  /* ---------- Top nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(180%) blur(14px);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    background:rgba(255,255,255,.78);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1120px;margin:0 auto;padding:14px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;letter-spacing:-.02em}
+  .brand svg{width:26px;height:26px}
+  .nav-links{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+  .nav-links a{color:var(--muted)}
+  .nav-links a:hover{color:var(--fg)}
+  @media (max-width:720px){.nav-links{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;padding:96px 22px 72px;text-align:center;overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:
+      radial-gradient(900px 400px at 50% -10%, rgba(14,165,233,.10), transparent 60%),
+      radial-gradient(700px 400px at 90% 20%, rgba(124,58,237,.08), transparent 60%),
+      linear-gradient(180deg,#ffffff 0%, #fafafa 100%);
+  }
+  .hero-grid{
+    position:absolute;inset:0;z-index:-1;opacity:.35;
+    background-image:
+      linear-gradient(rgba(10,10,10,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,10,10,.045) 1px, transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse at 50% 30%, #000 40%, transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 30%, #000 40%, transparent 75%);
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-mono);font-size:12.5px;color:var(--fg-soft);
+    padding:6px 12px;border:1px solid var(--border);border-radius:999px;
+    background:rgba(255,255,255,.7);backdrop-filter:blur(6px);
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2s ease-out infinite}
+  .hero h1 .grad{
+    background:linear-gradient(100deg,#0ea5e9 0%,#7c3aed 55%,#0ea5e9 100%);
+    background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:gradientShift 6s linear infinite;
+  }
+  .hero .lead{
+    max-width:640px;margin:20px auto 8px;color:var(--muted);font-size:18px;
+  }
+  .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 20px;border-radius:10px;font-weight:500;font-size:15px;
+    border:1px solid var(--border-strong);background:#fff;color:var(--fg);
+    box-shadow:var(--shadow-sm);transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    font-family:var(--font-sans);
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);color:var(--fg)}
+  .btn svg{width:16px;height:16px}
+  .btn.primary{
+    background:linear-gradient(135deg,#0a0a0a 0%,#1f2937 100%);
+    color:#fff;border-color:#0a0a0a;
+  }
+  .btn.primary:hover{color:#fff;border-color:#0a0a0a}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    max-width:1120px;margin:0 auto;padding:16px 22px 96px;
+    display:grid;grid-template-columns:220px 1fr;gap:56px;
+  }
+  @media (max-width:900px){.layout{grid-template-columns:1fr;gap:0} .toc{display:none}}
+
+  .toc{
+    position:sticky;top:88px;align-self:start;height:fit-content;
+    font-size:14px;color:var(--muted);
+  }
+  .toc-title{
+    font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:12px;
+  }
+  .toc ul{list-style:none;padding:0;margin:0;border-left:1px solid var(--border)}
+  .toc li a{
+    display:block;padding:6px 0 6px 14px;margin-left:-1px;
+    border-left:2px solid transparent;color:var(--muted);font-size:13.5px;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .toc li a:hover{color:var(--fg)}
+  .toc li a.active{color:var(--fg);border-left-color:var(--accent)}
+
+  main{min-width:0}
+
+  /* ---------- Cards / features ---------- */
+  .features{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+    gap:14px;margin-top:20px;
+  }
+  .card{
+    position:relative;background:#fff;border:1px solid var(--border);
+    border-radius:var(--radius);padding:20px;
+    transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}
+  .card .ico{
+    width:34px;height:34px;border-radius:9px;
+    display:grid;place-items:center;margin-bottom:12px;
+    background:linear-gradient(135deg,#f0f9ff 0%,#faf5ff 100%);
+    border:1px solid var(--border);
+    color:var(--accent-ink);
+  }
+  .card .ico svg{width:18px;height:18px}
+  .card h3{font-family:var(--font-display)}
+  .card p{font-size:14.5px;color:var(--muted);margin:0}
+
+  /* ---------- Code blocks ---------- */
+  pre{
+    background:#0a0a0a;color:#e5e7eb;border-radius:var(--radius);
+    padding:18px 20px;overflow:auto;font-size:13.5px;line-height:1.7;
+    border:1px solid #1f2937;position:relative;
+  }
+  pre code{color:inherit;background:none;border:0;padding:0}
+  pre .c{color:#94a3b8}
+  pre .k{color:#7dd3fc}
+  pre .s{color:#a5b4fc}
+  pre .p{color:#f9a8d4}
+
+  /* ---------- Flow terminal ---------- */
+  .terminal{
+    background:#0a0a0a;border:1px solid #1f2937;border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow-lg);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:8px;padding:10px 14px;
+    background:#111827;border-bottom:1px solid #1f2937;
+  }
+  .terminal-bar .b{width:11px;height:11px;border-radius:50%}
+  .terminal-bar .b1{background:#ff5f57}.terminal-bar .b2{background:#febc2e}.terminal-bar .b3{background:#28c840}
+  .terminal-bar .title{
+    margin-left:8px;font-family:var(--font-mono);font-size:12px;color:#94a3b8;
+  }
+  .terminal pre{border:0;border-radius:0;background:transparent;margin:0;padding:18px 20px}
+
+  /* ---------- Steps ---------- */
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:20px 0}
+  ol.steps > li{
+    counter-increment:s;position:relative;padding:0 0 22px 44px;
+    border-left:1px dashed var(--border);margin-left:11px;
+  }
+  ol.steps > li::before{
+    content:counter(s);position:absolute;left:-12px;top:-2px;
+    width:24px;height:24px;border-radius:50%;
+    display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;font-weight:600;
+    background:#0a0a0a;color:#fff;border:3px solid #fff;
+    box-shadow:var(--shadow-sm);
+  }
+  ol.steps > li:last-child{border-left-color:transparent}
+  ol.steps strong{font-weight:600;color:var(--fg)}
+
+  /* ---------- FAQ ---------- */
+  details{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 18px;margin:10px 0;transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  details[open]{border-color:var(--border-strong);box-shadow:var(--shadow-sm)}
+  summary{cursor:pointer;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{
+    content:"";width:10px;height:10px;flex:none;
+    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:rotate(-45deg);transition:transform .2s ease;
+  }
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{margin:12px 0 4px;color:var(--muted);font-size:14.5px}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--border);background:var(--bg-soft);
+    padding:48px 22px;text-align:center;color:var(--muted);font-size:14px;
+  }
+  footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  footer .links a{color:var(--muted)}
+  footer .links a:hover{color:var(--fg)}
+  footer .copy{font-family:var(--font-mono);font-size:12.5px}
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease, transform .6s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- Back to top ---------- */
+  .top{
+    position:fixed;left:22px;bottom:22px;z-index:99;
+    width:42px;height:42px;border-radius:50%;border:1px solid var(--border);
+    background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+    display:grid;place-items:center;color:var(--fg);
+    box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;
+  }
+  .top.show{opacity:1;pointer-events:auto}
+  .top:hover{transform:translateY(-2px)}
+  .top svg{width:16px;height:16px}
+</style>
+</head>
+<body>
+
+<!-- Floating GitHub button -->
+<a class="gh-fab" href="https://github.com/realximanta/cf-telegram-bot" target="_blank" rel="noopener" aria-label="View on GitHub">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.19 1.78 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18.92-.26 1.9-.38 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.73 18.27.5 12 .5z"/>
+  </svg>
+  <span>View on GitHub</span>
+  <span class="dot" aria-hidden="true"></span>
+</a>
+
+<!-- Top nav -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 6.5 19z"/>
+        <path d="M9 14l2 2 4-4"/>
+      </svg>
+      <span>cfdnsbot</span>
+    </a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#features">Features</a>
+      <a href="#quickstart">Quick start</a>
+      <a href="#deploy">Deploy</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero" id="top">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <span class="eyebrow"><span class="dot"></span> MIT licensed &middot; Python 3.11+ &middot; Render free tier</span>
+  <h1>Cloudflare DNS Manager<br/><span class="grad">as a Telegram bot.</span></h1>
+  <p class="lead">Create Cloudflare CNAME records from Telegram. No dashboard, no heavy pages, no wasted mobile data — a full DNS change uses under 1&nbsp;KB instead of 2–5&nbsp;MB.</p>
+  <div class="hero-actions">
+    <a class="btn primary" href="https://github.com/realximanta/cf-telegram-bot" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.19 1.78 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18.92-.26 1.9-.38 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.73 18.27.5 12 .5z"/></svg>
+      Star on GitHub
+    </a>
+    <a class="btn" href="#quickstart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      Read the docs
+    </a>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+  <aside class="toc" aria-label="Table of contents">
+    <div class="toc-title">On this page</div>
+    <ul>
+      <li><a href="#overview" class="active">Overview</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#flow">Flow</a></li>
+      <li><a href="#quickstart">Quick start</a></li>
+      <li><a href="#deploy">Deploy</a></li>
+      <li><a href="#clone">Clone</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </aside>
+
+  <main>
+
+    <section id="overview" class="reveal">
+      <h2>Overview</h2>
+      <p>Cloudflare's dashboard is great on a laptop and painful on a phone — especially on prepaid data. This bot replaces the whole workflow with a Telegram conversation. You type <code>/cname</code>, choose a domain from a button, send the target, and Cloudflare creates the record. That's it.</p>
+      <p>The project is open source under the MIT license, ships with a <code>render.yaml</code> for one-click deploys, and exposes a <code>/health</code> endpoint so a free UptimeRobot monitor keeps it awake around the clock.</p>
+    </section>
+
+    <section id="features" class="reveal">
+      <h2>Features</h2>
+      <div class="features">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <h3>Data-cheap by design</h3>
+          <p>Telegram text commands cost under 1 KB. The Cloudflare dashboard loads 2–5 MB per visit.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3>Locked to you</h3>
+          <p>Only chat IDs listed in <code>ALLOWED_CHAT_IDS</code> get a response. Everyone else is ignored.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 12h4M15 12h2"/></svg></div>
+          <h3>Inline button picker</h3>
+          <p>Choose the exact zone from buttons built live from your Cloudflare account — no typing domain names.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <h3>Self keep-alive</h3>
+          <p>Ships a <code>/health</code> endpoint that Render and UptimeRobot use to keep the service hot 24/7.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7M21 3l-9 9M5 21h14a2 2 0 0 0 2-2v-7M3 10V5a2 2 0 0 1 2-2h7"/></svg></div>
+          <h3>Extensible</h3>
+          <p>Adding <code>/a</code>, <code>/txt</code>, <code>/mx</code>, and delete flows is a matter of one handler each.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 6.5 19z"/></svg></div>
+          <h3>Zero cost</h3>
+          <p>Render free tier plus UptimeRobot free tier — the whole stack runs at $0 per month.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="flow" class="reveal">
+      <h2>Flow</h2>
+      <p>A full DNS change, start to finish, from Telegram.</p>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="b b1"></span><span class="b b2"></span><span class="b b3"></span>
+          <span class="title">telegram — @your_cf_bot</span>
+        </div>
+        <pre><span class="c">You  </span> <span class="k">/cname</span>
+<span class="c">Bot  </span> Step 1/3 — Send the subdomain name you want to create.
+       Example: <span class="s">mysub</span>
+
+<span class="c">You  </span> mysub
+<span class="c">Bot  </span> Step 2/3 — Pick the full domain for mysub:
+       [ mysub.example.com ]   [ mysub.example.net ]
+       [ mysub.example.org ]   [ Cancel ]
+
+<span class="c">You  </span> ( taps mysub.example.com )
+<span class="c">Bot  </span> Step 3/3 — Selected: mysub.example.com
+       Now send the target hostname. Example: user.github.io
+
+<span class="c">You  </span> user.github.io
+<span class="c">Bot  </span> DNS record created successfully.
+       Domain:  mysub.example.com
+       Type:    CNAME
+       Target:  user.github.io
+       Proxied: Yes    TTL: Auto</pre>
+      </div>
+    </section>
+
+    <section id="quickstart" class="reveal">
+      <h2>Quick start</h2>
+      <ol class="steps">
+        <li><strong>Fork the repository.</strong> Open <a href="https://github.com/realximanta/cf-telegram-bot/fork" target="_blank" rel="noopener">github.com/realximanta/cf-telegram-bot</a> and click Fork.</li>
+        <li><strong>Create a Telegram bot.</strong> Message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>, run <code>/newbot</code>, and copy the token.</li>
+        <li><strong>Get your Telegram ID.</strong> Message <a href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a> and copy the numeric ID.</li>
+        <li><strong>Create a Cloudflare API token.</strong> Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener">Cloudflare API Tokens</a>, use the <em>Edit zone DNS</em> template, keep <code>Zone:Read</code> and <code>DNS:Edit</code>, scope it to the zones you want.</li>
+        <li><strong>Deploy on Render.</strong> New &rarr; Blueprint &rarr; select your fork &rarr; fill the three env vars.</li>
+        <li><strong>Keep it alive.</strong> Add an UptimeRobot monitor on <code>https://&lt;your-service&gt;.onrender.com/health</code>, interval 5 minutes.</li>
+      </ol>
+    </section>
+
+    <section id="deploy" class="reveal">
+      <h2>Deploy</h2>
+      <p>Render reads the <code>render.yaml</code> Blueprint from your fork automatically. You only need to provide three environment variables.</p>
+      <pre><span class="c"># .env</span>
+<span class="k">TELEGRAM_TOKEN</span>=<span class="s">"123456789:AAYourTokenFromBotFather"</span>
+<span class="k">CF_API_TOKEN</span>=<span class="s">"your_cloudflare_api_token"</span>
+<span class="k">ALLOWED_CHAT_IDS</span>=<span class="s">"123456789"</span>       <span class="c"># comma-separated</span>
+<span class="k">PORT</span>=<span class="s">8080</span>                            <span class="c"># Render injects this automatically</span></pre>
+      <p>Once Render reports a healthy deploy you can message your bot on Telegram and run <code>/start</code>.</p>
+    </section>
+
+    <section id="clone" class="reveal">
+      <h2>Clone</h2>
+      <p>Prefer to run it locally first?</p>
+      <pre><span class="c"># HTTPS</span>
+git clone https://github.com/realximanta/cf-telegram-bot.git
+
+<span class="c"># SSH</span>
+git clone git@github.com:realximanta/cf-telegram-bot.git
+
+<span class="c"># GitHub CLI</span>
+gh repo clone realximanta/cf-telegram-bot
+
+cd cf-telegram-bot
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            <span class="c"># fill in your secrets</span>
+python bot.py</pre>
+    </section>
+
+    <section id="faq" class="reveal">
+      <h2>FAQ</h2>
+      <details><summary>Is this really free to run?</summary><p>Yes. The code is MIT licensed, and the recommended stack — Render's free web service plus a free UptimeRobot monitor — costs nothing.</p></details>
+      <details><summary>How much mobile data does it actually use?</summary><p>A full DNS change over Telegram is under 1 KB round-trip. Opening the Cloudflare dashboard once is 2–5 MB of HTML, JS, and fonts.</p></details>
+      <details><summary>Can somebody else use my bot if they find it?</summary><p>No. The bot ignores every chat ID that isn't listed in <code>ALLOWED_CHAT_IDS</code>. Only you get a response.</p></details>
+      <details><summary>Which record types are supported today?</summary><p>CNAME. A, AAAA, TXT, MX, SRV, and delete flows are on the roadmap.</p></details>
+      <details><summary>Why do I need UptimeRobot?</summary><p>Render's free tier sleeps after roughly 15 minutes of inactivity. UptimeRobot pings the bot's <code>/health</code> endpoint every 5 minutes to keep it hot.</p></details>
+    </section>
+
+    <section id="contact" class="reveal">
+      <h2>Contact</h2>
+      <p>Repository: <a href="https://github.com/realximanta/cf-telegram-bot" target="_blank" rel="noopener">github.com/realximanta/cf-telegram-bot</a><br/>
+      Author: <a href="https://github.com/realximanta" target="_blank" rel="noopener">@realximanta</a> &middot; <a href="mailto:realximanta@gmail.com">realximanta@gmail.com</a></p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="links">
+    <a href="https://github.com/realximanta/cf-telegram-bot" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/realximanta/cf-telegram-bot/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    <a href="https://github.com/realximanta/cf-telegram-bot/issues" target="_blank" rel="noopener">Issues</a>
+    <a href="mailto:realximanta@gmail.com">Email</a>
+  </div>
+  <div class="copy">MIT License &middot; &copy; <span id="y"></span> realximanta</div>
+</footer>
+
+<a href="#top" class="top" id="toTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</a>
+
+<script>
+  // Year
+  document.getElementById('y').textContent = new Date().getFullYear();
+
+  // Scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // TOC active state
+  const tocLinks = Array.from(document.querySelectorAll('.toc a'));
+  const sections = tocLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const setActive = () => {
+    const y = window.scrollY + 120;
+    let current = sections[0];
+    for (const s of sections) { if (s.offsetTop <= y) current = s; }
+    tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current.id));
+  };
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+
+  // Back to top
+  const toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', () => {
+    toTop.classList.toggle('show', window.scrollY > 600);
+  }, { passive: true });
+</script>
+</body>
+</html>
