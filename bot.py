@@ -14,12 +14,11 @@ import aiohttp
 from aiohttp import web
 from dotenv import load_dotenv
 from telegram import (
-    ChatAction,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Update,
 )
-from telegram.constants import ParseMode
+from telegram.constants import ChatAction, ParseMode
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
