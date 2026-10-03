@@ -4,8 +4,11 @@ Cloudflare DNS Manager — Telegram Bot
 Long-polling Telegram bot to create Cloudflare DNS records (CNAME)
 directly from Telegram. Includes a lightweight HTTP health endpoint
 so the process stays alive on Render free tier (paired with UptimeRobot).
+
+Compatible with Python 3.11 – 3.14 and python-telegram-bot >= 21.6
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -64,6 +67,7 @@ logging.basicConfig(
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("telegram.ext.Application").setLevel(logging.INFO)
+logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 logger = logging.getLogger("cf-bot")
 
 if not ALLOWED_CHAT_IDS:
@@ -131,7 +135,7 @@ HELP_TEXT = (
     "• /cname — Create a CNAME record\n"
     "• /cancel — Cancel current operation\n"
     "• /help — Show this message\n\n"
-    "💡 _Example:_ create `ximanta` and point it to `realximanta.github.io`."
+    "💡 _Example:_ create `mysub` and point it to `user.github.io`."
 )
 
 
@@ -160,7 +164,7 @@ async def cmd_cname(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
     await update.message.reply_text(
         "📝 *Step 1/3* — Send the *subdomain name* you want to create.\n\n"
-        "Example: `ximanta`\n\n"
+        "Example: `mysub`\n\n"
         "_Send /cancel to abort._",
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -246,7 +250,7 @@ async def handle_zone_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.edit_message_text(
         f"🎯 *Step 3/3* — Selected: `{fqdn}`\n\n"
         "Now send the *target* hostname.\n"
-        "Example: `realximanta.github.io`\n"
+        "Example: `user.github.io`\n"
         "_Do not include `https://` or a trailing path._",
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -262,7 +266,7 @@ async def handle_target(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if not TARGET_RE.match(target) or " " in target:
         await update.message.reply_text(
             "❌ Invalid target. Send a hostname like "
-            "`realximanta.github.io`:",
+            "`user.github.io`:",
             parse_mode=ParseMode.MARKDOWN,
         )
         return ASK_TARGET
@@ -391,6 +395,7 @@ def build_application() -> Application:
         ],
         per_user=True,
         per_chat=True,
+        per_message=False,
         allow_reentry=True,
     )
 
@@ -412,4 +417,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Explicitly create an event loop for maximum compatibility with
+    # Python 3.14+ where asyncio.get_event_loop() no longer auto-creates
+    # a loop on the main thread.
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
     main()
